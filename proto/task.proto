@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+// Specify the Go package where the generated code will be placed.
+option go_package = "GO_GPU_DEMO/proto";
+
+package ml;
+
+message ModelData {
+  string model_id = 1;
+  bytes parameters = 2; // Serialized parameters, possibly using a simple format or even raw binary data
+}
+
+message ModelResult {
+  string model_id = 1;
+  bytes results = 2; // Results, serialized in a suitable format
+}
+
+
+// Define a message for node registration
+message NodeInfo {
+  string node_id = 1;
+}
+
+// New message for node status updates
+message NodeStatusUpdate {
+  string node_id = 1;
+  int32 load = 2; // Load can be represented as an integer, reflecting tasks or other metrics
+}
+
+// Define a message for a simple acknowledgment response
+message Acknowledgment {
+  bool success = 1;
+  string message = 2;
+}
+
+// Message representing a task to be processed by a node/worker.
+message Task {
+  string task_id = 1;
+  string model_id = 2;
+  string type = 3;  // Add this field to indicate the type of task.
+  bytes parameters = 4;
+  bytes model_data = 5;
+}
+
+// Message representing the result of processing a task.
+message TaskResult {
+  string task_id = 1; // Corresponding task ID
+  bytes result = 2; // Serialized result of the task
+  // Add additional fields as needed to provide enough information about the task result.
+}
+
+service ModelService {
+  rpc ProcessModel(ModelData) returns (ModelResult);
+
+  // New RPC methods for node management
+  rpc RegisterNode(NodeInfo) returns (Acknowledgment);
+  rpc UnregisterNode(NodeInfo) returns (Acknowledgment);
+
+  // New RPC method for worker nodes to request tasks
+  rpc RequestTask(NodeInfo) returns (Task);
+
+  // New RPC method for worker nodes to report results
+  rpc ReportResult(TaskResult) returns (Acknowledgment);
+
+  // New RPC method for updating node status
+  rpc UpdateNodeStatus(NodeStatusUpdate) returns (Acknowledgment);
+}
